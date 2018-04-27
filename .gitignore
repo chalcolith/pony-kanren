@@ -1,0 +1,6 @@
+*.exe
+*.ilk
+*.pdb
+build/
+.vscode/
+version.pony
