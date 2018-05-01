@@ -1,55 +1,47 @@
 
+use mut = "collections"
 use "collections/persistent"
 
-type Index is USize
+class tag Var
 
-class Var
-  var _n: USize
+type UnifyStruct[T] is {(T, T, State[T]): Iterator[State[T]]} val
 
-  new create() =>
-    _n = 0
+type RedirectMap is HashMap[Var,Var,mut.HashIs[Var]]
+type BindingMap[T: Any #share] is HashMap[Var,T,mut.HashIs[Var]]
 
-  fun ref _bind(n: USize) =>
-    _n = n
-
-type Binding[T] is (Index | T! | None)
-
-type UnifyStruct[T] is {(a: T, b: T, s: State[T]): Iterator[State[T]]}
-
-primitive UnifyIs[T]
-  fun apply(a: T, b: T, s: State[T]): Iterator[State[T]] =>
-    if a is b then
-      [s].values()
-    else
-      [].values()
-    end
-
-class box State[T]
-  let _bindings: MapIs[Index, Binding[T]]
+class box State[T: Any #share]
+  let _redirects: RedirectMap
+  let _bindings: BindingMap[T]
   let _unify_struct: UnifyStruct[T]
 
-  new create(unify_struct: UnifyStruct[T] = UnifyIs[T]) =>
-    _bindings = MapIs[Index, Binding[T]].update(0, None)
+  new create(unify_struct: UnifyStruct[T]) =>
+    _redirects = RedirectMap
+    _bindings = BindingMap[T]
+    _unify_struct = unify_struct
 
-  new _create(bindings: MapIs[Index, Binding[T]], us: UnifyStruct[T]) =>
+  new _create(redirects: RedirectMap, bindings: BindingMap[T],
+    unify_struct: UnifyStruct[T])
+  =>
+    _redirects = redirects
     _bindings = bindings
-    _unify_struct = us;
+    _unify_struct = unify_struct
 
   fun apply(v: Var): (T! | None) =>
-    var n = v._n
-    while true do
-      match _bindings.get_or_else(n, None)
-      | None =>
-        return None
-      | let n': Index =>
-        n = n'
-      | let t': T =>
-        return t'
+    try
+      var cur = v
+      while _redirects.contains(cur) do
+        cur = _redirects(cur)?
+      end
+      if _bindings.contains(cur) then
+        _bindings(cur)?
       end
     end
 
-  fun update(v: Var, value: (Index | T)): State[T]^ =>
-    State[T]._create(_bindings(v) = value, _unify_struct)
+  fun _redirect(from: Var, to: Var): State[T]^ =>
+    State[T]._create(_redirects.update(from, to), _bindings, _unify_struct)
+
+  fun _bind(v: Var, to: T): State[T]^ =>
+    State[T]._create(_redirects, _bindings.update(v, to), _unify_struct)
 
   fun unify(a: (Var | T), b: (Var | T)): Iterator[State[T]] =>
     match a
@@ -62,14 +54,14 @@ class box State[T]
           | let tb: T! => // and b is bound
             _unify_struct(ta, tb, this) // return the structural unification
           else // if b is not bound
-            [this(vb) = ta].values() // bind b to the value already bound to a
+            [_bind(vb, ta)].values() // bind b to the value already bound to a
           end
         else // a is not bound
           match this(vb)
           | let tb: T! => // if b is bound
-            [this(va) = tb].values()
+            [_bind(va, tb)].values()
           else // b is not bound
-            [this(va) = vb._n] // point a at b
+            [_redirect(va, vb)] // point a at b
           end
         end
       | let tb: T => // b is a value
@@ -77,7 +69,7 @@ class box State[T]
         | let ta: T! => // if a is bound
           _unify_struct(ta, tb, this) // return the structural unification
         else
-          [this(va) = tb].values() // bind a to b
+          [_bind(va, tb)].values() // bind a to b
         end
       end
     | let ta: T => // if a is a value
@@ -87,9 +79,17 @@ class box State[T]
         | let tb: T! => // if b is bound
           _unify_struct(ta, tb, this)
         else // if b is not bound
-          [this(vb) = ta] // bind b to a
+          [_bind(vb, ta)] // bind b to a
         end
       | let tb: T => // if b is a value
         _unify_struct(ta, tb, this)
       end
+    end
+
+primitive UnifyEq[T: Equatable[T]]
+  fun apply(a: T, b: T, s: State[T]): Iterator[State[T]] =>
+    if a == b then
+      [s].values()
+    else
+      [].values()
     end
