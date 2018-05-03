@@ -17,12 +17,12 @@ type _Bindings is MapIs[_Index, USize]
 type _Values[T] is List[T]
 
 class box State[T]
-  let _vars: _Vars // maps variables to indices
-  let _redirects: _Redirects
-  let _bindings: _Bindings
-  let _values: _Values[T]
-  let _unify: UnifyStruct[T]
-  let _errors: List[String]
+  let _vars: _Vars           // maps variables to indices
+  let _redirects: _Redirects // variables that point to other variables
+  let _bindings: _Bindings   // variables that point to values
+  let _values: _Values[T]    // all the values we know about
+  let _unify: UnifyStruct[T] // function to do structural unification
+  let _errors: List[String]  // errors we have collected
 
   new create(unify: UnifyStruct[T]) =>
     _vars = _Vars

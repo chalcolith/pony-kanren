@@ -59,3 +59,27 @@ primitive Goals
           ib'.next()?
       end
     }
+
+  fun disj[T](a: Goal[T], b: Goal[T]): Goal[T] =>
+    {(s: State[T])(a, b): Iterator[State[T]] =>
+      object
+        let iters: Array[Iterator[State[T]]] = [a(s); b(s)]
+        var index: USize = 0
+
+        fun ref has_next(): Bool =>
+          try
+            iters(0)?.has_next() or iters(1)?.has_next()
+          else
+            false
+          end
+
+        fun ref next(): State[T] ? =>
+          if iters(index)?.has_next() then
+            iters(index = 1 - index)?.next()?
+          elseif iters(1 - index)?.has_next() then
+            iters(1 - (index = 1 - index))?.next()?
+          else
+            error
+          end
+      end
+    }
