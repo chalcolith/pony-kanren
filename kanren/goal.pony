@@ -1,5 +1,7 @@
 
-interface Goal[T]
+use "itertools"
+
+interface val Goal[T]
   fun apply(s: State[T]): Iterator[State[T]]
 
 primitive Goals
@@ -14,3 +16,46 @@ primitive Goals
 
   fun unify_val[T](a: Var, t: val->T): Goal[T] =>
     {(s: State[T]): Iterator[State[T]] => s.unify_val(a, t)}
+
+  fun fail[T](): Goal[T] =>
+    {(s: State[T]): Iterator[State[T]] => [].values()}
+
+  fun conj[T](a: Goal[T], b: Goal[T]): Goal[T] =>
+    {(s: State[T])(a, b): Iterator[State[T]] =>
+      object
+        let ia: Iterator[State[T]] = a(s)
+        var ib: (Iterator[State[T]] | None) = None
+
+        fun ref has_next(): Bool =>
+          match ib
+          | let ib': Iterator[State[T]] =>
+            if ib'.has_next() then
+              return true
+            elseif not ia.has_next() then
+              return false
+            end
+          end
+
+          try
+            let ib' = b(ia.next()?)
+            ib = ib'
+            ib'.has_next()
+          else
+            false
+          end
+
+        fun ref next(): State[T] ? =>
+          match ib
+          | let ib': Iterator[State[T]] =>
+            if ib'.has_next() then
+              return ib'.next()?
+            elseif not ia.has_next() then
+              error
+            end
+          end
+
+          let ib' = b(ia.next()?)
+          ib = ib'
+          ib'.next()?
+      end
+    }

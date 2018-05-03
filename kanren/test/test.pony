@@ -8,6 +8,7 @@ actor Main is TestList
 
   fun tag tests(test: PonyTest) =>
     test(_TestUnifyValSimpleEqual)
+    test(_TestConjLateBindingSimpleEqual)
 
 
 class iso _TestUnifyValSimpleEqual is UnitTest
@@ -18,8 +19,40 @@ class iso _TestUnifyValSimpleEqual is UnitTest
 
     let a = Var("a")
     let g = Goals.fresh[USize](a, Goals.unify_val[USize](a, expected))
-    let results = g(State[USize](UnifyEq[USize]))
 
+    let results = g(State[USize](UnifyEq[USize]))
+    h.assert_true(results.has_next())
+    try
+      let s = results.next()?
+      h.assert_false(s.has_error())
+      match s(a)
+      | let actual: USize =>
+        h.assert_eq[USize](expected, actual)
+      | None =>
+        h.fail()
+      end
+    else
+      h.fail()
+    end
+    h.assert_false(results.has_next())
+
+class iso _TestConjLateBindingSimpleEqual is UnitTest
+  fun name(): String => "Conj_LateBinding_Simple_Equal"
+
+  fun apply(h: TestHelper) =>
+    let expected: USize = 123
+
+    let a = Var("a")
+    let b = Var("b")
+    let g =
+      Goals.fresh[USize](a,
+        Goals.fresh[USize](b,
+          Goals.conj[USize](
+            Goals.unify_vars[USize](a, b),
+            Goals.unify_val[USize](b, expected)
+          )))
+
+    let results = g(State[USize](UnifyEq[USize]))
     h.assert_true(results.has_next())
     try
       let s = results.next()?
