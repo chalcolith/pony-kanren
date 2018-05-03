@@ -7,43 +7,30 @@ actor Main is TestList
     PonyTest(env, this)
 
   fun tag tests(test: PonyTest) =>
-    test(_TestUnifySimpleEqualRight)
-    test(_TestUnifySimpleEqualLeft)
+    test(_TestUnifyValSimpleEqual)
 
 
-class iso _TestUnifySimpleEqualRight is UnitTest
-  fun name(): String => "Unify_Simple_Equal_Right"
-
-  fun apply(h: TestHelper) =>
-    let a = Var
-    let g = Goals[USize].unify(a, 123)
-    let s = State[USize](UnifyEq[USize])
-    let results = g(s)
-
-    h.assert_true(results.has_next())
-    let s' = results.next()
-    match s'(a)
-    | let n: USize =>
-      h.assert_eq[USize](123, n)
-    | None =>
-      h.fail()
-    end
-
-class iso _TestUnifySimpleEqualLeft is UnitTest
-  fun name(): String => "Unify_Simple_Equal_Left"
+class iso _TestUnifyValSimpleEqual is UnitTest
+  fun name(): String => "Unify_Val_Simple_Equal"
 
   fun apply(h: TestHelper) =>
-    let a = Var
-    let g = Goals[USize].unify(123, a)
-    let s = State[USize](UnifyEq[USize])
-    let results = g(s)
+    let expected: USize = 123
+
+    let a = Var("a")
+    let g = Goals.fresh[USize](a, Goals.unify_val[USize](a, expected))
+    let results = g(State[USize](UnifyEq[USize]))
 
     h.assert_true(results.has_next())
-    let s' = results.next()
-    match s'(a)
-    | let n: USize =>
-      h.assert_eq[USize](123, n)
-    | None =>
+    try
+      let s = results.next()?
+      h.assert_false(s.has_error())
+      match s(a)
+      | let actual: USize =>
+        h.assert_eq[USize](expected, actual)
+      | None =>
+        h.fail()
+      end
+    else
       h.fail()
     end
     h.assert_false(results.has_next())
