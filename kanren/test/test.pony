@@ -19,6 +19,7 @@ class iso _TestUnifyValSimpleEqual is UnitTest
   fun apply(h: TestHelper) =>
     let expected: USize = 123
 
+    // A = 123
     let a = Var("a")
     let g = Goals.fresh[USize](a, Goals.unify_val[USize](a, expected))
 
@@ -45,6 +46,8 @@ class iso _TestConjLateBindingSimpleEqual is UnitTest
   fun apply(h: TestHelper) =>
     let expected: USize = 123
 
+    // A = B && B = 123
+    // -> A = 123
     let a = Var("a")
     let b = Var("b")
     let g =
@@ -66,6 +69,12 @@ class iso _TestConjLateBindingSimpleEqual is UnitTest
       else
         h.fail()
       end
+      match s(b)
+      | let actual: USize =>
+        h.assert_eq[USize](expected, actual)
+      else
+        h.fail()
+      end
     else
       h.fail()
     end
@@ -79,8 +88,10 @@ class iso _TestDisjLateBindingSimpleEqual is UnitTest
     try
       let expected = [as USize: 123; 456]
 
-      let a = Var("a")
-      let b = Var("b")
+      // A = B && (B = 123 || B = 456)
+      // A = 123; A = 456
+      let a = Var("A")
+      let b = Var("B")
       let g =
         Goals.fresh[USize](a,
           Goals.fresh[USize](b,
@@ -97,6 +108,12 @@ class iso _TestDisjLateBindingSimpleEqual is UnitTest
         let s = results.next()?
         h.assert_false(s.has_error())
         match s(a)
+        | let actual: USize =>
+          h.assert_eq[USize](exp, actual)
+        else
+          h.fail()
+        end
+        match s(b)
         | let actual: USize =>
           h.assert_eq[USize](exp, actual)
         else
