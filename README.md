@@ -3,6 +3,9 @@
 Pony-Kanren is an implementation of [microKanren](http://minikanren.org/) for
 the [Pony programming language](https://www.ponylang.org).
 
+You can find library documentation
+[here](http://kulibali.github.io/pony-kanren/kanren--index/).
+
 To set up a logic program and query its results:
 
 - Create an empty `State` value, with a functor that can unify the data type
@@ -50,6 +53,3 @@ let g =
 
 let results = g(State[USize](UnifyEq[USize]))
 ```
-
-There is some more extensive library documentation
-[here](http://kulibali.github.io/pony-kanren/kanren--index/).
