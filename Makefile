@@ -40,8 +40,8 @@ $(binary): $(GEN_FILES) $(SOURCE_FILES) | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-docs: $(SOURCE_FILES) $(BUILD_DIR)
-	stable env $(PONYC) --docs $(target) -o $(BUILD_DIR)
+docs: $(SOURCE_FILES)
+	stable env $(PONYC) --docs-public $(target) -o $(BUILD_DIR)
 
 test: $(binary)
 	$(binary)

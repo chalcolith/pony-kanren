@@ -2,7 +2,7 @@
 # Pony-Kanren
 
 Pony-Kanren is an implementation of [microKanren](http://minikanren.org/) for
-the [Pony programming language](https://www.ponylang.org) programming language.
+the [Pony programming language](https://www.ponylang.org).
 
 To set up a logic program and query its results:
 

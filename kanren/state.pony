@@ -2,6 +2,9 @@
 use "collections/persistent"
 
 class val Var
+  """
+  Represents a variable in a logical expression.
+  """
   let name: String
 
   new val create(name': String = "?") =>
@@ -9,6 +12,11 @@ class val Var
 
 
 type UnifyStruct[T] is {(val->T, val->T, State[T]): Iterator[State[T]]} val
+"""
+A functor that take two values and returns a sequence of states representing
+possible unifications for them.  This is used to be able to unify custom
+data types that may include variables in their fields.
+"""
 
 type _Index is USize
 type _Vars is MapIs[Var, _Index]
@@ -17,6 +25,11 @@ type _Bindings is MapIs[_Index, USize]
 type _Values[T] is List[T]
 
 class box State[T]
+  """
+  Represents the state of solving a particular expression.  It holds information
+  about which variables are in use, which are bound to other variables, and
+  which are bound to values.
+  """
   let _vars: _Vars           // maps variables to indices
   let _redirects: _Redirects // variables that point to other variables
   let _bindings: _Bindings   // variables that point to values
@@ -43,18 +56,48 @@ class box State[T]
     _errors = errors
 
   fun apply(v: Var): (val->T | None) =>
+    """
+    Queries the state for the value that this variable is (transitively) bound
+    to.  A return value of `None` either means that the state does not know
+    about the variable, or it is not bound.
+    """
     try
       let index = _walk(_vars(v)?)
       _values(_values.size() - _bindings(index)?)?
     end
 
+  fun exists(v: Var): Bool =>
+    """
+    Returns `true` if the state knows about the variable.
+    """
+    _vars.contains(v)
+
+  fun is_bound(v: Var): Bool =>
+    try
+      let index = _walk(_vars(v)?)
+      _bindings.contains(index)
+    else
+      false
+    end
+
   fun has_error(): Bool =>
+    """
+    Returns `true` if the state has recorded an error.
+    """
     _errors.size() > 0
 
   fun get_errors(): List[String] =>
+    """
+    Returns the list of errors that the state has recorded, newest first.
+    """
     _errors
 
   fun fresh(v: Var): State[T]^ =>
+    """
+    Returns a new state that knows about the variable, unless the state has an
+    error (in which case the state is unchanged), or the state already knows
+    about the variable (in which case the new state will contain an error).
+    """
     if has_error() then
       this
     elseif _vars.contains(v) then
@@ -67,6 +110,10 @@ class box State[T]
     end
 
   fun unify_vars(a: Var, b: Var): Iterator[State[T]] =>
+    """
+    Attempts to unify the two variables, returning a sequence of states
+    representing possible bindings for them.
+    """
     if has_error() then
       [this].values()
     elseif not _vars.contains(a) then
@@ -95,6 +142,11 @@ class box State[T]
     end
 
   fun unify_vals(a: val->T, b: val->T): Iterator[State[T]] =>
+    """
+    Attempts to unify two values using the functor the state was given on
+    initialization.  Returns a sequence of states representing possible
+    bindings for any variables in the values.
+    """
     if has_error() then
       [this].values()
     else
@@ -102,6 +154,9 @@ class box State[T]
     end
 
   fun unify_val(a: Var, t: val->T): Iterator[State[T]] =>
+    """
+    Attempts to unify and bind a variable to a value.
+    """
     if has_error() then
       [this].values()
     elseif not _vars.contains(a) then
