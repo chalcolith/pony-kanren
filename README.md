@@ -73,6 +73,6 @@ let s1 = results.next()?
 s1(a) == 123 // true
 s1(b) == 123 // true
 let s2 = results.next()?
-s1(a) == 456 // true
-s1(b) == 456 // true
+s2(a) == 456 // true
+s2(b) == 456 // true
 ```
