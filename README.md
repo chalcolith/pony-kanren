@@ -8,7 +8,7 @@ You can find library documentation
 
 ## Workflow
 
-To set up a logic program and query its results:
+To set up a logic expression and query its results:
 
 - Create an empty `State` value, with a functor that can unify the data type
   that your variables refer to.
