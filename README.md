@@ -4,11 +4,17 @@ Pony-Kanren is an implementation of [microKanren](http://minikanren.org/) for
 the [Pony programming language](https://www.ponylang.org).
 
 The easiest way to use Pony-Kanren in your code is via
-[Pony-Stable](https://github.com/ponylang/pony-stable).
+[Pony-Stable](https://github.com/ponylang/pony-stable): run
 
-Run `stable add github kulibali/pony-kanren` to add Pony-Kanren as a dependency
-to your `bundle.json`, and then `use "kanren"` in your code to import the
-library.
+```bash
+stable add github kulibali/pony-kanren
+```
+to add Pony-Kanren as a dependency to your `bundle.json`, and then
+```pony
+use "kanren"
+```
+
+in your code to import the library.
 
 You can find library documentation
 [here](http://kulibali.github.io/pony-kanren/kanren--index/).
@@ -67,5 +73,6 @@ let s1 = results.next()?
 s1(a) == 123 // true
 s1(b) == 123 // true
 let s2 = results.next()?
-s1(a) == 456
+s1(a) == 456 // true
+s1(b) == 456 // true
 ```
