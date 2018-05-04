@@ -6,6 +6,8 @@ the [Pony programming language](https://www.ponylang.org).
 You can find library documentation
 [here](http://kulibali.github.io/pony-kanren/kanren--index/).
 
+## Workflow
+
 To set up a logic program and query its results:
 
 - Create an empty `State` value, with a functor that can unify the data type
