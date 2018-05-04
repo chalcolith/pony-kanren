@@ -3,6 +3,13 @@
 Pony-Kanren is an implementation of [microKanren](http://minikanren.org/) for
 the [Pony programming language](https://www.ponylang.org).
 
+The easiest way to use Pony-Kanren in your code is via
+[Pony-Stable](https://github.com/ponylang/pony-stable).
+
+Run `stable add github kulibali/pony-kanren` to add Pony-Kanren as a dependency
+to your `bundle.json`, and then `use "kanren"` in your code to import the
+library.
+
 You can find library documentation
 [here](http://kulibali.github.io/pony-kanren/kanren--index/).
 
@@ -41,6 +48,8 @@ two states, one where `A` and `B` are bound to `123`, and one where `A` and `B`
 are bound to `456`:
 
 ```pony
+use "kanren"
+
 let a = Var("A")
 let b = Var("B")
 let g =
@@ -54,4 +63,9 @@ let g =
         ))))
 
 let results = g(State[USize](UnifyEq[USize]))
+let s1 = results.next()?
+s1(a) == 123 // true
+s1(b) == 123 // true
+let s2 = results.next()?
+s1(a) == 456
 ```
